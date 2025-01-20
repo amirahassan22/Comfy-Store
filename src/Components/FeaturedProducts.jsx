@@ -9,7 +9,7 @@ export default function FeaturedProducts() {
   console.log(data);
   return (
     <div>
-      <SectionTitle/>
+      <SectionTitle text='Featured Products'/>
       <div className="grid grid-cols-3 gap-10 px-5">
         {data.map((product) => {
           const { image, title, price } = product.attributes;

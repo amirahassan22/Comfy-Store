@@ -4,7 +4,7 @@ import FormInput from "./FormInput";
 import customFetch, { formatPrice } from "../utils";
 import { toast } from "react-toastify";
 import { clearCart } from "../Features/Cart/CartSlice";
-export const action = store => async ({ request }) => {
+export const action = (store,queryClient) => async ({ request }) => {
   const formData = await request.formData();
   const placeOrderData = Object.fromEntries(formData);
   const {cartItems,orderTotal,numItemsInCart} = store.getState().cart; // arr
@@ -25,13 +25,14 @@ export const action = store => async ({ request }) => {
       { data: orderData },
       { headers: headers }
     );
+    queryClient.removeQueries(['orders'])
     toast.success("your order is sent successfully");
     store.dispatch(clearCart())
     return redirect('/orders')
   } catch (error) {
     const errorMsg = error?.response?.data?.error?.message || "An error happened while placing your order"
     toast.error(errorMsg);
-    if (error.response.status === 401 || 403) {
+    if (error?.response?.status === 401 || 403) {
       return redirect("/login")
     }
     return null;

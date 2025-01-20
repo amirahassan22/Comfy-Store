@@ -3,12 +3,20 @@ import customFetch from "../utils";
 import { toast } from "react-toastify";
 import { redirect, useLoaderData } from "react-router-dom";
 import SectionTitle from "../Components/sectionTitle.jsx";
-import Pagination from "../Components/Pagination.jsx";
 import OrderList from "../Components/OrderList.jsx";
 import ComplexPagination from "../Components/ComplexPagination.jsx";
 
+const orderQuery = (params,user) =>{
+  return{
+    queryKey:['orders',user.username,params.page ?parseInt(params.page) : 1 ],
+    queryFn : ()=> customFetch(`/orders`, {params, headers: {
+      Authorization: `Bearer ${user.token}`,
+    } })
+  }
+}
+
 export const loader =
-  (store) =>
+  (store,queryClient) =>
   async ({ request }) => {
     const user = store.getState().user.user;
     if (!user) {
@@ -18,12 +26,9 @@ export const loader =
     const entries = Object.fromEntries([
       ...new URL(request.url).searchParams.entries(),
     ]);
-    const userToken = store.getState().user.user.token;
-    const headers = {
-      Authorization: `Bearer ${userToken}`,
-    };
+    // const userToken = store.getState().user.user.token;
     try {
-      const response = await customFetch(`/orders?page=${entries.page || 1}`, { headers: headers });
+      const response = await queryClient.ensureQueryData(orderQuery(entries,user))
 
       return { orders: response.data.data, meta: response.data.meta };
     } catch (error) {
@@ -31,7 +36,7 @@ export const loader =
         error?.response?.data?.error?.message ||
         "An error happened while Displaying your order";
       toast.error(errorMsg);
-      if (error.response.status === 401 || 403) {
+      if (error?.response?.status === 401 || 403) {
         return redirect("/login");
       }
       return null;
