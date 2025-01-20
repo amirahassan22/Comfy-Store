@@ -1,26 +1,23 @@
 import React from "react";
 import { Form, redirect } from "react-router-dom";
 import FormInput from "./FormInput";
-import { store } from "./../store.js";
 import customFetch, { formatPrice } from "../utils";
 import { toast } from "react-toastify";
-export const action = async ({ request }) => {
+import { clearCart } from "../Features/Cart/CartSlice";
+export const action = store => async ({ request }) => {
   const formData = await request.formData();
   const placeOrderData = Object.fromEntries(formData);
-  const itemsInCart = store.getState().cart.cartItems; // arr
-  const chargeTotal = store.getState().cart.orderTotal;
-  const totalAmount = store.getState().cart.numItemsInCart;
+  const {cartItems,orderTotal,numItemsInCart} = store.getState().cart; // arr
   const orderData = {
     ...placeOrderData,
-    cartItems: itemsInCart,
-    chargeTotal: chargeTotal,
-    numItemsInCart: totalAmount,
-    orderTotal: formatPrice(chargeTotal),
+    cartItems,
+    chargeTotal: orderTotal,
+    numItemsInCart,
+    orderTotal: formatPrice(orderTotal),
   };
-  const userToken = store.getState().user.user.token;
+  // const userToken = ;
   const headers = {
-    Authorization: `Bearer ${userToken}`,
-    "Content-Type": "application/json",
+    Authorization: `Bearer ${store.getState().user.user.token}`,
   };
   try {
     const response = await customFetch.post(
@@ -28,11 +25,15 @@ export const action = async ({ request }) => {
       { data: orderData },
       { headers: headers }
     );
-    console.log(response);
     toast.success("your order is sent successfully");
+    store.dispatch(clearCart())
     return redirect('/orders')
   } catch (error) {
-    toast.error(error?.response?.data?.error?.message);
+    const errorMsg = error?.response?.data?.error?.message || "An error happened while placing your order"
+    toast.error(errorMsg);
+    if (error.response.status === 401 || 403) {
+      return redirect("/login")
+    }
     return null;
   }
 

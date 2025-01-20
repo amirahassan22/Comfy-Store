@@ -4,6 +4,7 @@ import { loader as productsLoader } from './Pages/Products.jsx'
 import { loader as landingLoader } from './Pages/Landing.jsx'
 import { loader as singleProductLoader } from './Pages/SingleProduct.jsx'
 import { loader as ordersLoading } from './Pages/Orders.jsx'
+import { loader as checkoutLoader } from './Pages/Checkout.jsx'
 import { action as registerAction } from './Pages/Register.jsx'
 import { action as loginAction } from './Pages/Login.jsx'
 import { action as checkoutAction } from './Components/CheckoutForm.jsx'
@@ -44,12 +45,13 @@ function App() {
         },
         {path:"checkout",
         element:<Checkout/>,
-        action: checkoutAction
+        loader: checkoutLoader(store),
+        action: checkoutAction(store)
       },
         {
           path:"orders",
           element:<Orders/>,
-          loader:ordersLoading
+          loader:ordersLoading(store)
         },
         
       ]
